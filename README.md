@@ -1,4 +1,4 @@
-# minilab3-customer-service
+# parking-lot-pico-project
 
 This is part of an in class minilab project that requirs the use of a Raspberry Pi Pico Pinout.
 

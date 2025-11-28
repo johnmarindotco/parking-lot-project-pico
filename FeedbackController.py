@@ -73,6 +73,11 @@ class FeedbackController:
         # Track when FEEDBACK needs to update the LCD
         self._feedback_needs_display = False
 
+        # Track last-known sensor states to avoid flicker / repeated updates
+        self._L1_entry_tripped = False
+        self._L1_exit_tripped  = False
+        self._L2_entry_tripped = False
+        self._L2_exit_tripped  = False
 
         # Instantiate a Model. Needs to have the number of states, self as the handler
         # You can also say debug=True to see some of the transitions on the screen
@@ -95,8 +100,24 @@ class FeedbackController:
         # Instantiate any sensor you need to process their trip/untrip events from
         # Events from sensors come back as sensorname_trip and sensorname_untrip
 
-        self._pir = DigitalSensor(pin=6, name="motion", lowActive=False, handler=None)
-        self._model.addSensor(self._pir)
+        # old
+        # self._pir = DigitalSensor(pin=6, name="motion", lowActive=False, handler=None)
+        # self._model.addSensor(self._pir)
+
+        # new
+        # Level 1 sensors
+        self._entrySensor_L1 = DigitalSensor(pin=6, name="L1_entry", lowActive=False, handler=None)
+        self._exitSensor_L1  = DigitalSensor(pin=5, name="L1_exit",  lowActive=False, handler=None)
+
+        self._model.addSensor(self._entrySensor_L1)
+        self._model.addSensor(self._exitSensor_L1)
+
+        # Level 2 sensors
+        self._entrySensor_L2 = DigitalSensor(pin=21, name="L2_entry", lowActive=False, handler=None)
+        self._exitSensor_L2  = DigitalSensor(pin=22, name="L2_exit",  lowActive=False, handler=None)
+
+        self._model.addSensor(self._entrySensor_L2)
+        self._model.addSensor(self._exitSensor_L2)
 
         # Add any timer you have. Multiple timers may be added but they must all
         # have distinct names. Events come back as [timername}_timeout
@@ -112,7 +133,7 @@ class FeedbackController:
         # Syntax: self._model.addTransition( SOURCESTATE, [eventlist], DESTSTATE)
         
         # some examples:
-        self._model.addTransition(WELCOME, ["motion_trip"], FEEDBACK)
+        # self._model.addTransition(WELCOME, ["motion_trip"], FEEDBACK) - commenting for now, not needed for testing
         self._model.addTransition(FEEDBACK, ["timer_timeout"], WELCOME)
 
         self._model.addTransition(FEEDBACK, ["happy_press"], HAPPY)
@@ -220,7 +241,68 @@ class FeedbackController:
         #     self._buzzer.stop()
         
         # Note the return False if notne of the conditions are met
+
+        # level 1 sensors
+        if event == "L1_entry_trip":
+            if not self._L1_entry_tripped:
+                self._L1_entry_tripped = True
+                self._display.clear()
+                self._display.showText("L1 ENTRY: TRIPPED", 0, 0)
+            return True
+
+        if event == "L1_entry_untrip":
+            if self._L1_entry_tripped:
+                self._L1_entry_tripped = False
+                self._display.clear()
+                self._display.showText("L1 ENTRY: CLEAR", 0, 0)
+            return True
+
+        if event == "L1_exit_trip":
+            if not self._L1_exit_tripped:
+                self._L1_exit_tripped = True
+                self._display.clear()
+                self._display.showText("L1 EXIT: TRIPPED", 0, 0)
+            return True
+
+        if event == "L1_exit_untrip":
+            if self._L1_exit_tripped:
+                self._L1_exit_tripped = False
+                self._display.clear()
+                self._display.showText("L1 EXIT: CLEAR", 0, 0)
+            return True
+
+        # level 2 sensors
+        if event == "L2_entry_trip":
+            if not self._L2_entry_tripped:
+                self._L2_entry_tripped = True
+                self._display.clear()
+                self._display.showText("L2 ENTRY: TRIPPED", 1, 0)
+            return True
+
+        if event == "L2_entry_untrip":
+            if self._L2_entry_tripped:
+                self._L2_entry_tripped = False
+                self._display.clear()
+                self._display.showText("L2 ENTRY: CLEAR", 1, 0)
+            return True
+
+        if event == "L2_exit_trip":
+            if not self._L2_exit_tripped:
+                self._L2_exit_tripped = True
+                self._display.clear()
+                self._display.showText("L2 EXIT: TRIPPED", 1, 0)
+            return True
+
+        if event == "L2_exit_untrip":
+            if self._L2_exit_tripped:
+                self._L2_exit_tripped = False
+                self._display.clear()
+                self._display.showText("L2 EXIT: CLEAR", 1, 0)
+            return True
+
         return False
+
+
 
     def stateDo(self, state):
         """
