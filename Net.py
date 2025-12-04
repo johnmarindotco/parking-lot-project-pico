@@ -266,21 +266,28 @@ class Net:
         
     def postJson(self, url, data):
         """
-        Similar to the above, use POST instead of PUT
-        Configure web service to accept JSON and create new entries
+        Send a HTTP POST with a JSON body.
+        Configure web service to accept JSON and create new entries.
         """
-        
+
         headers = {
             "Content-Type": "application/json"
         }
 
         try:
-            response = requests.post(url, data=json.dumps(data), headers=headers)
+            if data:
+                response = requests.post(url, data=json.dumps(data), headers=headers, timeout=10)
+
+            else:
+                response = requests.post(url)
+
+            jsondata = response.json()
             status = response.status_code
             Log.d(f"Status Code:{status}")
             Log.d(f"Response:{response.text}")
             response.close()
-            return status
+            return jsondata
+
         except Exception as e:
             Log.e(f"Failed to send request: {e}")
             return None

@@ -3,7 +3,7 @@ time.sleep(0.1) # Wait for USB to become ready
 
 print("Hello, Pi Pico!")
 
-from FeedbackController import *
+from ParkingLotController import *
 
-f = FeedbackController()
+f = ParkingLotController()
 f.run()
